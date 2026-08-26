@@ -1,3 +1,12 @@
+<img width="415" height="876" alt="image" src="https://github.com/user-attachments/assets/08472e76-b4cb-4c47-90c4-817c7fc26b21" />
+<img width="308" height="566" alt="image" src="https://github.com/user-attachments/assets/d2eab9e1-e5f8-4b7d-8f48-b26a43069124" />
+<img width="282" height="562" alt="image" src="https://github.com/user-attachments/assets/fd681e26-9f36-4d24-a15f-c7ef9ff0556f" />
+<img width="295" height="567" alt="image" src="https://github.com/user-attachments/assets/43ff9ed7-301e-4639-906b-df5c5db9bce6" />
+<img width="282" height="559" alt="image" src="https://github.com/user-attachments/assets/629a72e3-4cd1-47cb-bec6-5ec84608d560" />
+<img width="416" height="866" alt="image" src="https://github.com/user-attachments/assets/36ea13f8-a9b8-4cd1-a356-e41990418b00" />
+<img width="1600" height="864" alt="image" src="https://github.com/user-attachments/assets/fde622da-8a9f-4264-9797-53b93942cb19" />
+
+
 # To-Do List (Android)
 
 ## Descrição do projeto e objetivo da aplicação
