@@ -36,7 +36,7 @@ O `TarefaViewModel` mantém e expõe o estado da tela de tarefas. Ele transforma
 A `ListaTarefasScreen` coleta o `StateFlow` de tarefas do `TarefaViewModel` usando `collectAsStateWithLifecycle()`, o que garante que a coleta respeite o ciclo de vida da tela (pausando quando ela não está visível). O valor coletado (`tarefas`) é repassado como parâmetro para o `ListaTarefasContent`, um composable "burro" (stateless) que apenas recebe dados e callbacks — essa separação facilita a visualização em `@Preview` sem depender do ViewModel real. As ações do usuário são disparadas por callbacks:
 
 - Marcar/desmarcar conclusão dispara `onCheckedChange`, que chama `viewModel.atualizar(tarefa.copy(concluida = ...))`.
-- Tocar no botão de exclusão dispara `onDeletar`, que chama `viewModel.deletar(tarefa)`.
+- Tocar no botão de exclusão dispara `onDeletar`, que exibe confirmação e chama `viewModel.deletar(tarefa)`.
 - Tocar em um item da lista chama `onEditarTarefa`, navegando para o formulário com o ID da tarefa.
 - Tocar no botão flutuante (FAB) chama `onNovaTarefa`, navegando para o formulário sem ID (nova tarefa).
 
@@ -44,7 +44,19 @@ Como a lista é um `StateFlow` observado pela UI, qualquer alteração no banco 
 
 ## Como `FormularioTarefaScreen` diferencia cadastro e edição
 
-A tela recebe um parâmetro `tarefaId` vindo da navegação. Se `tarefaId` for igual a `0`, o formulário está em modo de **cadastro** (nova tarefa); qualquer outro valor indica **edição** de uma tarefa existente. A tela busca a tarefa correspondente dentro da lista atual (`tarefas.find { it.id == tarefaId }`) e usa seus valores (título e descrição) para pré-preencher os campos quando em modo de edição. O composable `FormularioTarefaContent` recebe a flag `isEdicao` apenas para ajustar o título da barra superior ("Nova Tarefa" ou "Editar Tarefa"), mantendo a lógica de decisão isolada do componente visual. Ao salvar, se `tarefaId == 0` uma nova `Tarefa` é inserida via `viewModel.inserir`; caso contrário, a tarefa existente é atualizada com `copy(titulo = ..., descricao = ...)` via `viewModel.atualizar`, preservando o ID e os demais campos originais (como `concluida` e `dataCriacao`).
+A tela recebe um parâmetro `tarefaId` vindo da navegação. Se `tarefaId` for igual a `0`, o formulário está em modo de **cadastro** (nova tarefa); qualquer outro valor indica **edição** de uma tarefa existente. A tela busca a tarefa correspondente dentro da lista atual (`tarefas.find { it.id == tarefaId }`) e usa seus valores (título e descrição) para pré-preencher os campos quando em modo de edição. O composable `FormularioTarefaContent` recebe a flag `isEdicao` para ajustar o título da barra superior ("Nova Tarefa" ou "Editar Tarefa") e exibir a ação de exclusão apenas no modo de edição. Ao salvar, se `tarefaId == 0` uma nova `Tarefa` é inserida via `viewModel.inserir`; caso contrário, a tarefa existente é atualizada com `copy(titulo = ..., descricao = ...)` via `viewModel.atualizar`, preservando o ID e os demais campos originais.
+
+## Funcionamento das Ações Cancelar e Excluir
+
+As ações de **Cancelar** e **Excluir** foram implementadas garantindo uma experiência fluida e prevenção contra exclusões acidentais:
+
+- **Ação Cancelar**:
+  - No formulário (`FormularioTarefaScreen`), o usuário pode tocar no botão **Cancelar** ou na seta de voltar da barra superior. Ambas as ações chamam `onVoltar()`, retornando à tela anterior via `navController.popBackStack()` sem salvar alterações.
+  - Nos diálogos de confirmação de exclusão e seletores de data/hora, o botão **Cancelar** fecha a caixa de diálogo mantendo o estado inalterado.
+
+- **Ação Excluir**:
+  - **Na Lista (`ListaTarefasScreen`)**: Ao clicar no ícone de lixeira, é exibido um diálogo de confirmação (`AlertDialog`) com as opções **Excluir** e **Cancelar**. Ao confirmar, a tarefa é removida via `viewModel.deletar(tarefa)`.
+  - **No Formulário (`FormularioTarefaScreen`)**: Ao editar uma tarefa existente (`isEdicao == true`), é disponibilizada a opção **Excluir** na barra superior e um botão de **Excluir** no rodapé do formulário. A confirmação via diálogo exclui a tarefa no banco e retorna à tela principal.
 
 ## Rotas configuradas em `AppNavigation` e passagem do ID da tarefa
 

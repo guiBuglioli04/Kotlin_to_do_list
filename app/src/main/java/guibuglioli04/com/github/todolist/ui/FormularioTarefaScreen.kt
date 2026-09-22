@@ -8,12 +8,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -68,6 +72,10 @@ fun FormularioTarefaScreen(
             }
             onVoltar()
         },
+        onExcluir = {
+            tarefaExistente?.let { viewModel.deletar(it) }
+            onVoltar()
+        },
         onVoltar = onVoltar
     )
 }
@@ -80,6 +88,7 @@ fun FormularioTarefaContent(
     descricaoInicial: String,
     dataHoraInicial: Long?,
     onSalvar: (titulo: String, descricao: String, dataHora: Long?) -> Unit,
+    onExcluir: (() -> Unit)? = null,
     onVoltar: () -> Unit
 ) {
     var titulo by remember(tituloInicial) { mutableStateOf(tituloInicial) }
@@ -97,6 +106,30 @@ fun FormularioTarefaContent(
 
     var mostrarSeletorData by remember { mutableStateOf(false) }
     var mostrarSeletorHora by remember { mutableStateOf(false) }
+    var mostrarDialogoExcluir by remember { mutableStateOf(false) }
+
+    if (mostrarDialogoExcluir) {
+        AlertDialog(
+            onDismissRequest = { mostrarDialogoExcluir = false },
+            title = { Text("Excluir tarefa") },
+            text = { Text("Tem certeza de que deseja excluir esta tarefa?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        mostrarDialogoExcluir = false
+                        onExcluir?.invoke()
+                    }
+                ) {
+                    Text("Excluir", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { mostrarDialogoExcluir = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
 
     if (mostrarSeletorData) {
         val estadoDatePicker = rememberDatePickerState(
@@ -160,6 +193,16 @@ fun FormularioTarefaContent(
                             contentDescription = "Voltar"
                         )
                     }
+                },
+                actions = {
+                    if (isEdicao && onExcluir != null) {
+                        IconButton(onClick = { mostrarDialogoExcluir = true }) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Excluir tarefa"
+                            )
+                        }
+                    }
                 }
             )
         }
@@ -217,19 +260,41 @@ fun FormularioTarefaContent(
                     }
                 }
             }
-            Button(
-                onClick = {
-                    val dataHora = if (temDataHora) {
-                        combinarDataHora(ano!!, mes!!, dia!!, hora!!, minuto!!)
-                    } else {
-                        null
-                    }
-                    onSalvar(titulo.trim(), descricao.trim(), dataHora)
-                },
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                enabled = titulo.isNotBlank() && (!temDataHora || (ano != null && hora != null))
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("Salvar")
+                OutlinedButton(
+                    onClick = onVoltar,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Cancelar")
+                }
+                if (isEdicao && onExcluir != null) {
+                    OutlinedButton(
+                        onClick = { mostrarDialogoExcluir = true },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text("Excluir")
+                    }
+                }
+                Button(
+                    onClick = {
+                        val dataHora = if (temDataHora) {
+                            combinarDataHora(ano!!, mes!!, dia!!, hora!!, minuto!!)
+                        } else {
+                            null
+                        }
+                        onSalvar(titulo.trim(), descricao.trim(), dataHora)
+                    },
+                    modifier = Modifier.weight(1f),
+                    enabled = titulo.isNotBlank() && (!temDataHora || (ano != null && hora != null))
+                ) {
+                    Text("Salvar")
+                }
             }
         }
     }
@@ -244,6 +309,7 @@ private fun FormularioTarefaContentNovaPreview() {
         descricaoInicial = "",
         dataHoraInicial = null,
         onSalvar = { _, _, _ -> },
+        onExcluir = {},
         onVoltar = {}
     )
 }
@@ -257,6 +323,7 @@ private fun FormularioTarefaContentEditarAvulsaPreview() {
         descricaoInicial = "Revisar anotações e DAO",
         dataHoraInicial = null,
         onSalvar = { _, _, _ -> },
+        onExcluir = {},
         onVoltar = {}
     )
 }
@@ -271,6 +338,7 @@ private fun FormularioTarefaContentEditarComPrazoPreview() {
         descricaoInicial = "Upload no portal da FIAP",
         dataHoraInicial = calendario.timeInMillis,
         onSalvar = { _, _, _ -> },
+        onExcluir = {},
         onVoltar = {}
     )
 }
